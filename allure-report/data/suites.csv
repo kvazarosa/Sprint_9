@@ -1,0 +1,4 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Тест проверяет возможность входа в систему с валидными учетными данными","1424","Проверка успешной авторизации","tests","Mon Aug 04 20:05:12 MSK 2025","passed","Mon Aug 04 20:05:13 MSK 2025","TestAuthorization","test_authorization","",""
+"Тест проверяет возможность регистрации нового пользователя","1324","Проверка успешного создания аккаунта","tests","Mon Aug 04 20:05:17 MSK 2025","passed","Mon Aug 04 20:05:19 MSK 2025","TestAccountRegistration","test_creating_account","",""
+"Тест проверяет возможность создания нового рецепта","5782","Проверка создания рецепта","tests","Mon Aug 04 20:05:22 MSK 2025","passed","Mon Aug 04 20:05:28 MSK 2025","","test_creating_recipe","",""
