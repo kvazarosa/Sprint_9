@@ -42,7 +42,8 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "volumes": ["/tmp:/tmp"]
+                "volumes": ["/tmp:/tmp", "$GITHUB_WORKSPACE/tests/assets:/assets"],
+                "tmpfs": {"/tmp": "size=512m"}
               }
             }
           }

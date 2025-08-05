@@ -1,4 +1,5 @@
 import time
+import os
 from pages.base_page import BasePage
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pathlib import Path
@@ -50,10 +51,23 @@ class CreateRecipePage(BasePage):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
 
     def upload_recipe_image(self):
-        file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
-        if not file_path:
+        # Локальный путь к файлу (для работы вне Docker)
+        local_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+        
+        if os.getenv('SELENOID_ENABLED') == 'true':
+            # Для Selenoid используем путь внутри контейнера
             file_path = "/assets/картинка.png"
-        self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
+        else:
+            # Для локального запуска используем абсолютный путь
+            file_path = str(local_path.absolute())
+        
+        # Проверяем существование файла (только для локального запуска)
+        if not os.getenv('SELENOID_ENABLED') == 'true' and not local_path.exists():
+            raise FileNotFoundError(f"Файл изображения не найден: {local_path}")
+        
+        # Загружаем файл
+        file_input = self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT)
+        file_input.send_keys(file_path)
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
