@@ -11,22 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     
-    services:
-      selenoid:
-        image: aerokube/selenoid:latest-release
-        ports:
-          - "4444:4444"
-        env:
-          OVERRIDE_VIDEO_OUTPUT_DIR: /tmp/video
-          DOCKER_API_VERSION: "1.40"
-        options: >-
-          --mount type=bind,source=${{ github.workspace }}/selenoid,target=/etc/selenoid
-          --health-cmd "curl -f http://localhost:4444/status || exit 1"
-          --health-interval 10s
-          --health-timeout 30s
-          --health-retries 10
-          --memory 2g
-          
     steps:
     - uses: actions/checkout@v4
     
@@ -54,23 +38,23 @@ jobs:
           "logOutputDir": "/tmp/logs"
         }' > selenoid/config.json
         
-        # Добавляем права на чтение
         chmod -R 755 selenoid
         
-    - name: Verify config files
+    - name: Pull Docker images
       run: |
-        echo "Contents of selenoid directory:"
-        ls -la selenoid/
-        echo "browsers.json content:"
-        cat selenoid/browsers.json
-        echo "config.json content:"
-        cat selenoid/config.json
+        docker pull aerokube/selenoid:latest-release
+        docker pull selenoid/chrome:128.0
         
-    - name: Pull browser image
-      run: docker pull selenoid/chrome:128.0
-        
-    - name: Wait for Selenoid
+    - name: Start Selenoid
       run: |
+        docker run -d --name selenoid \
+          -p 4444:4444 \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v $(pwd)/selenoid:/etc/selenoid \
+          -e OVERRIDE_VIDEO_OUTPUT_DIR=/tmp/video \
+          aerokube/selenoid:latest-release \
+          -limit 5 -timeout 5m
+        
         echo "Waiting for Selenoid to start..."
         for i in {1..30}; do
           if curl -s http://localhost:4444/status | grep -q '"total":1'; then
@@ -84,12 +68,21 @@ jobs:
         docker logs selenoid || true
         exit 1
         
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
     - name: Run tests
       run: |
         python -m pytest --alluredir=allure-results -v
       env:
         SELENOID_URL: http://localhost:4444/wd/hub
-        SELENOID_VERSION: "128.0"
         
     - name: Upload results
       if: always()
@@ -99,3 +92,9 @@ jobs:
         path: |
           allure-results/
           selenoid/
+          
+    - name: Clean up
+      if: always()
+      run: |
+        docker stop selenoid || true
+        docker rm selenoid || true
