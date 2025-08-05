@@ -63,7 +63,7 @@ jobs:
     - name: Copy test assets
       run: |
         mkdir -p assets
-        cp -r tests/assets/* assets/  # Копируем тестовые файлы в рабочую директорию
+        cp -r assets/* assets/ 
     - name: Run tests
       run: |
         python -m pytest --alluredir=allure-results -v
