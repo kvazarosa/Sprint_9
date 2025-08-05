@@ -8,12 +8,24 @@ class BasePage:
         self.wait = WebDriverWait(driver, 10)
 
     def element_is_visible(self, locator, timeout=15):
-        return self.wait.until(EC.visibility_of_element_located(locator))
-
-        # element = WebDriverWait(self.driver, timeout).until(
-        #     EC.visibility_of_element_located(locator)
-        # )
-        # return element
+        """Ожидает появление видимого элемента с добавлением диагностики"""
+        try:
+            element = WebDriverWait(self.driver, timeout).until(
+                EC.visibility_of_element_located(locator)
+            )
+            return element
+        except Exception as e:
+            # Диагностика при ошибке
+            print(f"\n--- Ошибка при поиске элемента {locator} ---")
+            print(f"URL страницы: {self.driver.current_url}")
+            print(f"Текущий HTML (первые 2000 символов):\n{self.driver.page_source[:2000]}")
+            
+            # Сохраняем скриншот
+            screenshot_path = "element_not_found.png"
+            self.driver.save_screenshot(screenshot_path)
+            print(f"Скриншот сохранен: {screenshot_path}")
+            
+            raise  # Перебрасываем исключение дальше
 
 
     def element_is_present(self, locator):
