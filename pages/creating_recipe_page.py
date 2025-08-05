@@ -49,39 +49,12 @@ class CreateRecipePage(BasePage):
     def enter_recipe_description(self, description):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
 
-    # def upload_recipe_image(self):
-    #     file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
-    #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
-
     def upload_recipe_image(self):
-        image_url = "https://avatars.mds.yandex.net/i?id=3b9a1f720a569d620f57d76b3128e1b6_l-8258696-images-thumbs&n=13"
-        
-        script = """
-        const imageUrl = arguments[0];
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.id = 'fileInput';
-        input.style.display = 'none';
-        document.body.appendChild(input);
-
-        fetch(imageUrl)
-            .then(response => response.blob())
-            .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                input.files = dataTransfer.files;
-                
-                const event = new Event('change', { bubbles: true });
-                input.dispatchEvent(event);
-            });
-        """
-        self.driver.execute_script(script, image_url)
-        time.sleep(2) 
+        file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+        self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
 
     def is_recipe_name_displayed(self):
         return self.is_element_displayed(CreateRecipeLocators.RECIPE_NAME_ON_PAGE)
-
