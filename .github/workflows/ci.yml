@@ -30,6 +30,14 @@ jobs:
         docker pull selenoid/chrome:120.0  # Используем стабильную версию
         docker pull aerokube/selenoid:latest-release
 
+    - name: Prepare test assets
+      run: |
+        mkdir -p assets
+        cp -r assets/* assets/
+        echo "Current directory: $(pwd)"
+        echo "Assets content:"
+        ls -la assets/
+
     - name: Prepare Selenoid config
       run: |
         mkdir -p selenoid-config
@@ -42,7 +50,7 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "volumes": ["$(pwd)/assets:/assets:ro"],
+                "volumes": ["$/home/runner/work/Sprint_9/Sprint_9/assets:/assets:ro"],
                 "tmpfs": {
                   "/tmp": "size=512m",
                   "/dev/shm": "size=512m"
