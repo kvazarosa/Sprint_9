@@ -25,15 +25,20 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
+    - name: Pull browser images
+      run: |
+        docker pull selenoid/chrome:120.0  # Используем стабильную версию
+        docker pull aerokube/selenoid:latest-release
+
     - name: Prepare Selenoid config
       run: |
         mkdir -p selenoid-config
         echo '{
           "chrome": {
-            "default": "128.0",
+            "default": "120.0",
             "versions": {
-              "128.0": {
-                "image": "selenoid/chrome:128.0",
+              "120.0": {
+                "image": "selenoid/chrome:120.0",
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
