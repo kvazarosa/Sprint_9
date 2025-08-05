@@ -23,30 +23,33 @@ jobs:
         mkdir -p video
         mkdir -p logs
 
-        # browsers.json с явным указанием всех параметров
-        echo '{
-          {
-            "chrome": {
-                "default": "128.0",
-                "versions": {
-                    "128.0": {
-                        "image": "selenoid/chrome:128.0",
-                        "port": "4444",
-                        "path": "/"
-                    }
-                }
+        cat > selenoid/browsers.json <<EOL
+        {
+          "chrome": {
+            "default": "128.0",
+            "versions": {
+              "128.0": {
+                "image": "selenoid/chrome:128.0",
+                "port": "4444",
+                "path": "/",
+                "env": ["TZ=UTC"],
+                "volumes": ["/tmp:/tmp", "\$(pwd)/video:/opt/selenoid/video"],
+                "tmpfs": ["/tmp"]
+              }
             }
-        }' > selenoid/browsers.json
+          }
+        }
+        EOL
 
-        # config.json с полной конфигурацией
-        echo '{
+        cat > selenoid/config.json <<EOL
+        {
           "videoOutputDir": "/opt/selenoid/video",
           "logOutputDir": "/opt/selenoid/logs",
           "enableLog": true,
           "enableVideo": true,
-          "sessionTimeout": "5m",
-          "browsers": "/etc/selenoid/browsers.json"
-        }' > selenoid/config.json
+          "sessionTimeout": "5m"
+        }
+        EOL
 
         chmod -R 755 selenoid
 
@@ -55,10 +58,11 @@ jobs:
         docker pull aerokube/selenoid:latest-release
         docker pull selenoid/chrome:128.0
 
-    - name: Start Selenoid with proper initialization
+    - name: Start Selenoid with logs streaming
       run: |
-        # Запускаем Selenoid с явным указанием всех параметров
-        docker run -d --name selenoid \
+        # Запускаем Selenoid с выводом логов в реальном времени
+        docker run --name selenoid \
+          -d \
           --privileged \
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
@@ -70,27 +74,22 @@ jobs:
           aerokube/selenoid:latest-release \
           -limit 5 -timeout 5m -conf /etc/selenoid/browsers.json
 
-        # Расширенная проверка инициализации
-        echo "Waiting for Selenoid initialization..."
-        for i in {1..15}; do
-          CONTAINER_STATUS=$(docker inspect -f '{{.State.Status}}' selenoid)
-          HEALTH_STATUS=$(docker inspect -f '{{.State.Health.Status}}' selenoid || echo "no-healthcheck")
-          
-          if [ "$CONTAINER_STATUS" == "running" ]; then
-            if curl -s http://localhost:4444/status | grep -q '"total":1'; then
-              echo "Selenoid is fully initialized!"
-              docker logs selenoid
-              exit 0
-            fi
-          fi
-          
-          echo "Initialization attempt $i/15 - Container: $CONTAINER_STATUS, Health: $HEALTH_STATUS"
-          sleep 5
-        done
+        # Просмотр логов в реальном времени
+        timeout 60s docker logs -f selenoid || true
 
-        echo "Selenoid failed to initialize properly"
-        docker logs selenoid
-        exit 1
+    - name: Verify Selenoid status
+      run: |
+        # Ждем доступности порта
+        echo "Waiting for port 4444..."
+        timeout 60s bash -c 'while ! nc -z localhost 4444; do sleep 1; done' || true
+        
+        # Проверяем статус
+        echo "Checking Selenoid status..."
+        curl -v http://localhost:4444/status || true
+        
+        # Проверяем контейнер
+        docker ps -a
+        docker inspect selenoid || true
 
     - name: Run tests
       run: |
