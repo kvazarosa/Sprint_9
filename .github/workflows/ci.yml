@@ -47,7 +47,7 @@ jobs:
         # Проверяем результат
         echo "Скопированные файлы:"
         ls -la /tmp/test-assets/
-        
+
     - name: Prepare Selenoid config
       run: |
         mkdir -p selenoid-config
@@ -60,7 +60,7 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "volumes": ["$/home/runner/work/Sprint_9/Sprint_9/assets:/assets:ro"],
+                "volumes": ["$/tmp/test-assets:/assets:ro"],
                 "tmpfs": {
                   "/tmp": "size=512m",
                   "/dev/shm": "size=512m"
@@ -76,7 +76,7 @@ jobs:
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid-config:/etc/selenoid \
-          -v $(pwd)/assets:/assets:ro \
+          -v $/tmp/test-assets:/assets:ro \
           aerokube/selenoid:latest-release \
           -limit 5
         
@@ -102,6 +102,7 @@ jobs:
       run: |
         docker stop selenoid || true
         docker rm selenoid || true
+        rm -rf /tmp/test-assets
 
 
 # name: Selenoid Tests Workflow
