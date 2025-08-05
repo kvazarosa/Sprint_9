@@ -33,14 +33,15 @@ jobs:
     - name: Prepare test assets
       run: |
         # Создаем папку для тестовых файлов
-        mkdir -p assets
+        mkdir -p test-assets
         
-        # Копируем картинку из /assets в /test-assets
-        cp assets/картинка.png assets/
+        # Скачиваем тестовое изображение (или используем свое)
+        wget https://via.placeholder.com/300x200.png -O test-assets/test-image.png
         
         # Проверяем
-        echo "Содержимое assets:"
-        ls -la assets/
+        echo "Содержимое test-assets:"
+        ls -la test-assets/
+        file test-assets/test-image.png  # Проверяем тип файла
 
     - name: Prepare Selenoid config
       run: |
@@ -70,7 +71,7 @@ jobs:
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid-config:/etc/selenoid \
-          -v $(pwd)/assets:/assets:ro \
+          -v $(pwd)/test-assets:/assets:ro \
           aerokube/selenoid:latest-release \
           -limit 5
         
@@ -78,11 +79,15 @@ jobs:
         sleep 15
         curl -v http://localhost:4444/status
 
+        # Проверяем, что файл доступен внутри контейнера
+        docker exec selenoid ls -la /assets
+
     - name: Run tests
       run: |
         python -m pytest --alluredir=allure-results -v
       env:
         SELENOID_ENABLED: "true"
+        TEST_IMAGE_PATH: "/assets/test-image.png"  # Передаем путь в тесты
 
     - name: Upload results
       if: always()
@@ -96,4 +101,4 @@ jobs:
       run: |
         docker stop selenoid || true
         docker rm selenoid || true
-        rm -rf assets
+        rm -rf test-assets

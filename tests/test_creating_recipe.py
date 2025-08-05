@@ -2,7 +2,8 @@ import allure
 from data import TestData
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pages.creating_recipe_page import AuthorizationPage, CreateRecipePage
-
+import os
+image_path = os.getenv('TEST_IMAGE_PATH', 'assets/test-image.png')
 
 @allure.title("Проверка создания рецепта")
 @allure.description("Тест проверяет возможность создания нового рецепта")
@@ -37,7 +38,7 @@ def test_create_recipe(driver):
     with allure.step("Ввод описания рецепта"):
         create_page.enter_recipe_description(TestData.RECIPE_DESCRIPTION)
     with allure.step("Загрузка изображения"):
-        create_page.upload_recipe_image()
+        create_page.upload_recipe_image(image_path)
     with allure.step("Создание рецепта"):
         create_page.click_create_recipe_final_button()
     with allure.step("Проверка отображения названия рецепта"):

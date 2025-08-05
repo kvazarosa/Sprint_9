@@ -54,33 +54,10 @@ class CreateRecipePage(BasePage):
     # def upload_recipe_image(self):
     #     file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
     #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
-    def upload_recipe_image(self):
-        file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
-        
-        if os.getenv('SELENOID_ENABLED') == 'true':
-            with open(file_path, "rb") as f:
-                file_data = base64.b64encode(f.read()).decode('utf-8')
-            
-            script = """
-            const input = arguments[0];
-            const fileData = arguments[1];
-            
-            fetch(`data:image/png;base64,${fileData}`)
-                .then(res => res.blob())
-                .then(blob => {
-                    const file = new File([blob], 'картинка.png');
-                    const dt = new DataTransfer();
-                    dt.items.add(file);
-                    input.files = dt.files;
-                    input.dispatchEvent(new Event('change', {bubbles: true}));
-                });
-            """
-            input_element = self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT)
-            self.driver.execute_script(script, input_element, file_data)
-        else:
-            self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
-        
-        time.sleep(1) 
+    def upload_recipe_image(self, image_path):
+        image_input = self.driver.find_element(*self.locators.IMAGE_INPUT)
+        image_input.send_keys(image_path)
+        time.sleep(2)
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
