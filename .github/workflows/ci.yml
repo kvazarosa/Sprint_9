@@ -12,12 +12,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Prepare test assets
-      run: |
-        mkdir -p assets
-        cp -r assets/* assets/  
-        ls -la assets/  
-
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -48,7 +42,7 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "volumes": ["$/assets:/assets:ro"],
+                "volumes": ["$(pwd)/assets:/assets:ro"],
                 "tmpfs": {
                   "/tmp": "size=512m",
                   "/dev/shm": "size=512m"
@@ -64,6 +58,7 @@ jobs:
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid-config:/etc/selenoid \
+          -v $(pwd)/assets:/assets:ro \
           aerokube/selenoid:latest-release \
           -limit 5
         
