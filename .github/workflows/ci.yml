@@ -15,7 +15,7 @@ jobs:
     - name: Prepare test assets
       run: |
         mkdir -p assets
-        cp -r tests/assets/* assets/  
+        cp -r assets/* assets/  
         ls -la assets/  
 
     - name: Set up Python
