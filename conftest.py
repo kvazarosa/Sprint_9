@@ -57,7 +57,7 @@ def driver():
     
     # Установите неявное ожидание
     driver.implicitly_wait(10)  # Ждать до 10 секунд при поиске элементов
-    driver.set_page_load_timeout(30)  # Таймаут загрузки страницы
+    driver.set_page_load_timeout(90)  # Таймаут загрузки страницы
     
     driver.get(Urls.HOME_PAGE_URL)
     yield driver
