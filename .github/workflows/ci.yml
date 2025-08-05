@@ -27,7 +27,9 @@ jobs:
               "128.0": {
                 "image": "selenoid/chrome:128.0",
                 "port": "4444",
-                "path": "/"
+                "path": "/",
+                "env": ["LANG=ru_RU.UTF-8", "LANGUAGE=ru:en", "LC_ALL=ru_RU.UTF-8"],
+                "volumes": ["/tmp:/tmp"]
               }
             }
           }
@@ -35,7 +37,10 @@ jobs:
         
         echo '{
           "videoOutputDir": "/tmp/video",
-          "logOutputDir": "/tmp/logs"
+          "logOutputDir": "/tmp/logs",
+          "enableLog": true,
+          "enableVideo": true,
+          "sessionTimeout": "5m"
         }' > selenoid/config.json
         
         chmod -R 755 selenoid
@@ -45,28 +50,41 @@ jobs:
         docker pull aerokube/selenoid:latest-release
         docker pull selenoid/chrome:128.0
         
-    - name: Start Selenoid
+    - name: Start Selenoid with proper permissions
       run: |
         docker run -d --name selenoid \
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid:/etc/selenoid \
-          -e OVERRIDE_VIDEO_OUTPUT_DIR=/tmp/video \
+          -v $(pwd)/video:/opt/selenoid/video \
+          -v $(pwd)/logs:/opt/selenoid/logs \
+          -e OVERRIDE_VIDEO_OUTPUT_DIR=/opt/selenoid/video \
+          -e TZ=Europe/Moscow \
           aerokube/selenoid:latest-release \
-          -limit 5 -timeout 5m
+          -limit 5 -timeout 5m -conf /etc/selenoid/browsers.json
         
-        echo "Waiting for Selenoid to start..."
-        for i in {1..30}; do
+        echo "Waiting for Selenoid to initialize..."
+        sleep 10  # Даем время на полную инициализацию
+        
+        for i in {1..10}; do
           if curl -s http://localhost:4444/status | grep -q '"total":1'; then
             echo "Selenoid is ready!"
+            docker logs selenoid
             exit 0
           fi
-          echo "Attempt $i/30: Selenoid not ready yet..."
+          echo "Waiting for Selenoid... Attempt $i/10"
           sleep 5
         done
-        echo "Selenoid failed to start after 30 attempts"
-        docker logs selenoid || true
+        
+        echo "Selenoid failed to start"
+        docker logs selenoid
         exit 1
+        
+    - name: Verify Selenoid status
+      run: |
+        curl -v http://localhost:4444/status
+        docker ps -a
+        docker inspect selenoid
         
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -83,6 +101,7 @@ jobs:
         python -m pytest --alluredir=allure-results -v
       env:
         SELENOID_URL: http://localhost:4444/wd/hub
+        SELENOID_BROWSER_VERSION: "128.0"
         
     - name: Upload results
       if: always()
@@ -91,7 +110,8 @@ jobs:
         name: test-results
         path: |
           allure-results/
-          selenoid/
+          video/
+          logs/
           
     - name: Clean up
       if: always()
