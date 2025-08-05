@@ -1,5 +1,4 @@
 import time
-import os
 from pages.base_page import BasePage
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pathlib import Path
@@ -50,24 +49,35 @@ class CreateRecipePage(BasePage):
     def enter_recipe_description(self, description):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
 
+    # def upload_recipe_image(self):
+    #     file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+    #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
+
     def upload_recipe_image(self):
-        # Локальный путь к файлу (для работы вне Docker)
-        local_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+        image_url = "https://avatars.mds.yandex.net/i?id=3b9a1f720a569d620f57d76b3128e1b6_l-8258696-images-thumbs&n=13"
         
-        if os.getenv('SELENOID_ENABLED') == 'true':
-            # Для Selenoid используем путь внутри контейнера
-            file_path = "/assets/картинка.png"
-        else:
-            # Для локального запуска используем абсолютный путь
-            file_path = str(local_path.absolute())
-        
-        # Проверяем существование файла (только для локального запуска)
-        if not os.getenv('SELENOID_ENABLED') == 'true' and not local_path.exists():
-            raise FileNotFoundError(f"Файл изображения не найден: {local_path}")
-        
-        # Загружаем файл
-        file_input = self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT)
-        file_input.send_keys(file_path)
+        script = """
+        const imageUrl = arguments[0];
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.id = 'fileInput';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
+        fetch(imageUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                input.files = dataTransfer.files;
+                
+                const event = new Event('change', { bubbles: true });
+                input.dispatchEvent(event);
+            });
+        """
+        self.driver.execute_script(script, image_url)
+        time.sleep(2) 
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
