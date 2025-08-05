@@ -21,3 +21,4 @@ class TestAuthorization:
             assert current_url == Urls.RECIPES_PAGE_URL
         with allure.step("Проверка видимости кнопки выхода"):
             assert auth_page.is_logout_button_visible()
+            
