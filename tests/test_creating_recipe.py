@@ -38,7 +38,7 @@ def test_create_recipe(driver):
     with allure.step("Ввод описания рецепта"):
         create_page.enter_recipe_description(TestData.RECIPE_DESCRIPTION)
     with allure.step("Загрузка изображения"):
-        create_page.upload_recipe_image(image_path)
+        create_page.upload_recipe_image()
     with allure.step("Создание рецепта"):
         create_page.click_create_recipe_final_button()
     with allure.step("Проверка отображения названия рецепта"):
