@@ -42,7 +42,6 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "volumes": ["$(pwd)/assets:/assets:ro"],
                 "tmpfs": {
                   "/tmp": "size=512m",
                   "/dev/shm": "size=512m"
@@ -58,8 +57,6 @@ jobs:
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid-config:/etc/selenoid \
-          aerokube/selenoid:latest-release \
-          -v $(pwd)/assets:/assets:ro \
           aerokube/selenoid:latest-release \
           -limit 5
         
