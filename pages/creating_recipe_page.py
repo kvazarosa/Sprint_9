@@ -84,3 +84,4 @@ class CreateRecipePage(BasePage):
 
     def is_recipe_name_displayed(self):
         return self.is_element_displayed(CreateRecipeLocators.RECIPE_NAME_ON_PAGE)
+
