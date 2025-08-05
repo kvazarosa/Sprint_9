@@ -1,85 +1,3 @@
-# name: Selenoid Tests Workflow
-
-# on:
-#   push:
-#     branches: [main]
-
-# jobs:
-#   test:
-#     runs-on: ubuntu-latest
-#     timeout-minutes: 30
-
-#     steps:
-#     - uses: actions/checkout@v4
-
-#     - name: Set up Python
-#       uses: actions/setup-python@v4
-#       with:
-#         python-version: '3.9'
-        
-#     - name: Install dependencies
-#       run: |
-#         python -m pip install --upgrade pip
-#         pip install -r requirements.txt
-
-#     - name: Set up Docker
-#       uses: docker/setup-buildx-action@v2
-
-#     - name: Pull browser images
-#       run: |
-#         docker pull selenoid/chrome:120.0  # Используем стабильную версию
-#         docker pull aerokube/selenoid:latest-release
-
-#     - name: Prepare Selenoid config
-#       run: |
-#         mkdir -p selenoid-config
-#         echo '{
-#           "chrome": {
-#             "default": "120.0",
-#             "versions": {
-#               "120.0": {
-#                 "image": "selenoid/chrome:120.0",
-#                 "port": "4444",
-#                 "path": "/",
-#                 "env": ["TZ=UTC"],
-#                 "volumes": ["/tmp:/tmp"]
-#               }
-#             }
-#           }
-#         }' > selenoid-config/browsers.json
-
-#     - name: Start Selenoid
-#       run: |
-#         docker run -d --name selenoid \
-#           -p 4444:4444 \
-#           -v /var/run/docker.sock:/var/run/docker.sock \
-#           -v $(pwd)/selenoid-config:/etc/selenoid \
-#           aerokube/selenoid:latest-release \
-#           -limit 5
-        
-#         echo "Waiting for Selenoid to start..."
-#         sleep 15
-#         curl -v http://localhost:4444/status
-
-#     - name: Run tests
-#       run: |
-#         python -m pytest --alluredir=allure-results -v
-#       env:
-#         SELENOID_ENABLED: "true"
-
-#     - name: Upload results
-#       if: always()
-#       uses: actions/upload-artifact@v4
-#       with:
-#         name: test-results
-#         path: allure-results/
-
-#     - name: Clean up
-#       if: always()
-#       run: |
-#         docker stop selenoid || true
-#         docker rm selenoid || true
-
 name: Selenoid Tests Workflow
 
 on:
@@ -89,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
     - uses: actions/checkout@v4
@@ -107,13 +25,14 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
-    - name: Prepare environment
+    - name: Pull browser images
+      run: |
+        docker pull selenoid/chrome:120.0  # Используем стабильную версию
+        docker pull aerokube/selenoid:latest-release
+
+    - name: Prepare Selenoid config
       run: |
         mkdir -p selenoid-config
-        mkdir -p video
-        mkdir -p logs
-
-        # browsers.json с базовой конфигурацией
         echo '{
           "chrome": {
             "default": "120.0",
@@ -122,87 +41,168 @@ jobs:
                 "image": "selenoid/chrome:120.0",
                 "port": "4444",
                 "path": "/",
-                "env": ["TZ=UTC", "LANG=en_US.UTF-8"],
-                "volumes": ["/tmp:/tmp", "$(pwd)/video:/opt/selenoid/video"],
-                "tmpfs": ["/tmp"]
+                "env": ["TZ=UTC"],
+                "volumes": ["/tmp:/tmp"]
               }
             }
           }
         }' > selenoid-config/browsers.json
 
-    - name: Pull Docker images
+    - name: Start Selenoid
       run: |
-        docker pull aerokube/selenoid:latest-release
-        docker pull selenoid/chrome:120.0
-        docker pull selenoid/video-recorder:latest-release
-
-    - name: Start Selenoid with retries
-      run: |
-        # Останавливаем и удаляем старый контейнер, если есть
-        docker stop selenoid || true
-        docker rm selenoid || true
-
-        # Запускаем Selenoid с увеличенными таймаутами
         docker run -d --name selenoid \
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid-config:/etc/selenoid \
-          -v $(pwd)/video:/opt/selenoid/video \
-          -v $(pwd)/logs:/opt/selenoid/logs \
-          -e OVERRIDE_VIDEO_OUTPUT_DIR=/opt/selenoid/video \
           aerokube/selenoid:latest-release \
-          -limit 5 -timeout 10m -conf /etc/selenoid/browsers.json
-
-        # Альтернативная проверка готовности
-        echo "Waiting for Selenoid to start..."
-        for i in {1..30}; do
-          if curl -s http://localhost:4444/status | grep -q '"total":1'; then
-            echo "Selenoid is ready!"
-            docker logs selenoid
-            exit 0
-          fi
-          
-          # Проверяем, что контейнер не упал
-          if [ "$(docker inspect -f '{{.State.Status}}' selenoid)" != "running" ]; then
-            echo "Selenoid container failed to start"
-            docker logs selenoid
-            exit 1
-          fi
-          
-          echo "Waiting for Selenoid... Attempt $i/30"
-          sleep 5
-        done
+          -limit 5
         
-        echo "Selenoid failed to respond after 30 attempts"
-        docker logs selenoid
-        exit 1
-
-    - name: Verify Selenoid
-      run: |
-        docker ps -a
-        docker inspect selenoid
+        echo "Waiting for Selenoid to start..."
+        sleep 15
         curl -v http://localhost:4444/status
-        docker logs selenoid
 
     - name: Run tests
       run: |
         python -m pytest --alluredir=allure-results -v
       env:
         SELENOID_ENABLED: "true"
-        SELENOID_TIMEOUT: "120s"
 
     - name: Upload results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-results
-        path: |
-          allure-results/
-          video/
-          logs/
+        path: allure-results/
 
     - name: Clean up
       if: always()
       run: |
         docker stop selenoid || true
         docker rm selenoid || true
+
+# name: Selenoid Tests Workflow
+
+# on:
+#   push:
+#     branches: [main]
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 60
+
+#     steps:
+#     - uses: actions/checkout@v4
+
+#     - name: Set up Python
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: '3.9'
+        
+#     - name: Install dependencies
+#       run: |
+#         python -m pip install --upgrade pip
+#         pip install -r requirements.txt
+
+#     - name: Set up Docker
+#       uses: docker/setup-buildx-action@v2
+
+#     - name: Prepare environment
+#       run: |
+#         mkdir -p selenoid-config
+#         mkdir -p video
+#         mkdir -p logs
+
+#         # browsers.json с базовой конфигурацией
+#         echo '{
+#           "chrome": {
+#             "default": "120.0",
+#             "versions": {
+#               "120.0": {
+#                 "image": "selenoid/chrome:120.0",
+#                 "port": "4444",
+#                 "path": "/",
+#                 "env": ["TZ=UTC", "LANG=en_US.UTF-8"],
+#                 "volumes": ["/tmp:/tmp", "$(pwd)/video:/opt/selenoid/video"],
+#                 "tmpfs": ["/tmp"]
+#               }
+#             }
+#           }
+#         }' > selenoid-config/browsers.json
+
+#     - name: Pull Docker images
+#       run: |
+#         docker pull aerokube/selenoid:latest-release
+#         docker pull selenoid/chrome:120.0
+#         docker pull selenoid/video-recorder:latest-release
+
+#     - name: Start Selenoid with retries
+#       run: |
+#         # Останавливаем и удаляем старый контейнер, если есть
+#         docker stop selenoid || true
+#         docker rm selenoid || true
+
+#         # Запускаем Selenoid с увеличенными таймаутами
+#         docker run -d --name selenoid \
+#           -p 4444:4444 \
+#           -v /var/run/docker.sock:/var/run/docker.sock \
+#           -v $(pwd)/selenoid-config:/etc/selenoid \
+#           -v $(pwd)/video:/opt/selenoid/video \
+#           -v $(pwd)/logs:/opt/selenoid/logs \
+#           -e OVERRIDE_VIDEO_OUTPUT_DIR=/opt/selenoid/video \
+#           aerokube/selenoid:latest-release \
+#           -limit 5 -timeout 10m -conf /etc/selenoid/browsers.json
+
+#         # Альтернативная проверка готовности
+#         echo "Waiting for Selenoid to start..."
+#         for i in {1..30}; do
+#           if curl -s http://localhost:4444/status | grep -q '"total":1'; then
+#             echo "Selenoid is ready!"
+#             docker logs selenoid
+#             exit 0
+#           fi
+          
+#           # Проверяем, что контейнер не упал
+#           if [ "$(docker inspect -f '{{.State.Status}}' selenoid)" != "running" ]; then
+#             echo "Selenoid container failed to start"
+#             docker logs selenoid
+#             exit 1
+#           fi
+          
+#           echo "Waiting for Selenoid... Attempt $i/30"
+#           sleep 5
+#         done
+        
+#         echo "Selenoid failed to respond after 30 attempts"
+#         docker logs selenoid
+#         exit 1
+
+#     - name: Verify Selenoid
+#       run: |
+#         docker ps -a
+#         docker inspect selenoid
+#         curl -v http://localhost:4444/status
+#         docker logs selenoid
+
+#     - name: Run tests
+#       run: |
+#         python -m pytest --alluredir=allure-results -v
+#       env:
+#         SELENOID_ENABLED: "true"
+#         SELENOID_TIMEOUT: "120s"
+
+#     - name: Upload results
+#       if: always()
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: test-results
+#         path: |
+#           allure-results/
+#           video/
+#           logs/
+
+#     - name: Clean up
+#       if: always()
+#       run: |
+#         docker stop selenoid || true
+#         docker rm selenoid || true
