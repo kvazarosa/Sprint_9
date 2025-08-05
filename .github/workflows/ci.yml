@@ -27,21 +27,26 @@ jobs:
 
     - name: Pull browser images
       run: |
-        docker pull selenoid/chrome:120.0
+        docker pull selenoid/chrome:120.0  # Используем стабильную версию
         docker pull aerokube/selenoid:latest-release
 
     - name: Prepare test assets
       run: |
-        # Создаем папку для тестовых файлов
-        mkdir -p test-assets
+        # Проверяем наличие исходного файла
+        echo "Содержимое рабочей директории:"
+        ls -la
+        echo "Содержимое assets:"
+        ls -la assets/
         
-        # Скачиваем тестовое изображение (или используем свое)
-        assets/картинка.png -O test-assets/картинка.png
+        # Создаем целевую папку
+        mkdir -p /tmp/test-assets
         
-        # Проверяем
-        echo "Содержимое test-assets:"
-        ls -la test-assets/
-        file test-assets/картинка.png  # Проверяем тип файла
+        # Копируем картинку (теперь из /assets в /tmp/test-assets)
+        cp assets/картинка.png /tmp/test-assets/
+        
+        # Проверяем результат
+        echo "Скопированные файлы:"
+        ls -la /tmp/test-assets/
 
     - name: Prepare Selenoid config
       run: |
@@ -55,7 +60,7 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "volumes": ["/github/workspace/test-assets:/assets:ro"],
+                "volumes": ["$/tmp/test-assets:/assets:ro"],
                 "tmpfs": {
                   "/tmp": "size=512m",
                   "/dev/shm": "size=512m"
@@ -71,7 +76,7 @@ jobs:
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid-config:/etc/selenoid \
-          -v $(pwd)/test-assets:/assets:ro \
+          -v $/tmp/test-assets:/assets:ro \
           aerokube/selenoid:latest-release \
           -limit 5
         
@@ -79,15 +84,11 @@ jobs:
         sleep 15
         curl -v http://localhost:4444/status
 
-        # Проверяем, что файл доступен внутри контейнера
-        docker exec selenoid ls -la /assets
-
     - name: Run tests
       run: |
         python -m pytest --alluredir=allure-results -v
       env:
         SELENOID_ENABLED: "true"
-        TEST_IMAGE_PATH: "/assets/картинка.png"  # Передаем путь в тесты
 
     - name: Upload results
       if: always()
@@ -101,4 +102,101 @@ jobs:
       run: |
         docker stop selenoid || true
         docker rm selenoid || true
-        rm -rf test-assets
+        rm -rf /tmp/test-assets
+
+
+# name: Selenoid Tests Workflow
+
+# on:
+#   push:
+#     branches: [main]
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 30
+
+#     services:
+#       selenoid:
+#         image: aerokube/selenoid:latest-release
+#         ports:
+#           - 4444:4444
+#         volumes:
+#           - /var/run/docker.sock:/var/run/docker.sock
+#           - ./selenoid-config:/etc/selenoid
+#         env:
+#           OVERRIDE_VIDEO_OUTPUT_DIR: /tmp/video
+#         options: >-
+#           --health-cmd "curl -f http://localhost:4444/status || exit 1"
+#           --health-interval 5s
+#           --health-timeout 2s
+#           --health-retries 5
+
+#     steps:
+#     - uses: actions/checkout@v4
+
+#     - name: Set up Python
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: '3.9'
+        
+#     - name: Install dependencies
+#       run: |
+#         python -m pip install --upgrade pip
+#         pip install -r requirements.txt
+#         pip install pytest-timeout  # Добавляем плагин для таймаутов
+
+#     - name: Prepare Selenoid config
+#       run: |
+#         mkdir -p selenoid-config
+#         echo '{
+#           "chrome": {
+#             "default": "120.0",
+#             "versions": {
+#               "120.0": {
+#                 "image": "selenoid/chrome:120.0",
+#                 "port": "4444",
+#                 "path": "/",
+#                 "env": ["TZ=UTC"],
+#                 "volumes": ["/tmp:/tmp"],
+#                 "tmpfs": {"/tmp": "size=512m"}
+#               }
+#             }
+#           }
+#         }' > selenoid-config/browsers.json
+
+#     - name: Pull browser images
+#       run: |
+#         docker pull selenoid/chrome:120.0
+#         docker pull selenoid/video-recorder:latest-release
+
+#     - name: Wait for Selenoid
+#       run: |
+#         echo "Waiting for Selenoid to become healthy..."
+#         for i in {1..10}; do
+#           if curl -s http://localhost:4444/status | grep -q '"total":1'; then
+#             echo "Selenoid is ready!"
+#             exit 0
+#           fi
+#           sleep 3
+#         done
+#         echo "Selenoid failed to start"
+#         exit 1
+
+#     - name: Run tests with retries
+#       run: |
+#         python -m pytest \
+#           --alluredir=allure-results \
+#           --reruns 3 \  # Перезапускать упавшие тесты до 3 раз
+#           --reruns-delay 5 \  # С задержкой 5 секунд между попытками
+#           -v
+#       env:
+#         SELENOID_ENABLED: "true"
+#         SELENOID_TIMEOUT: "60s"
+
+#     - name: Upload results
+#       if: always()
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: test-results
+#         path: allure-results/
