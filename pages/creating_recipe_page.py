@@ -58,7 +58,6 @@ class CreateRecipePage(BasePage):
         file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
         
         if os.getenv('SELENOID_ENABLED') == 'true':
-            # Для Selenoid используем упрощенную загрузку через base64
             with open(file_path, "rb") as f:
                 file_data = base64.b64encode(f.read()).decode('utf-8')
             
@@ -79,10 +78,9 @@ class CreateRecipePage(BasePage):
             input_element = self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT)
             self.driver.execute_script(script, input_element, file_data)
         else:
-            # Локальный запуск
             self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
         
-        time.sleep(1)  # Минимальное ожидание
+        time.sleep(1) 
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
