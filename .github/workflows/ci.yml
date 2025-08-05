@@ -64,6 +64,11 @@ jobs:
         sleep 15
         curl -v http://localhost:4444/status
 
+    - name: Prepare test assets
+      run: |
+        mkdir -p assets
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg==" | base64 -d > assets/картинка.png
+
     - name: Run tests
       run: |
         python -m pytest --alluredir=allure-results -v
