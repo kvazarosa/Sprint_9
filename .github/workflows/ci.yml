@@ -16,6 +16,8 @@ jobs:
         image: aerokube/selenoid:latest-release
         ports:
           - "4444:4444"
+        volumes:
+          - ./selenoid:/etc/selenoid
         env:
           OVERRIDE_VIDEO_OUTPUT_DIR: /tmp/video
           DOCKER_API_VERSION: "1.40"
@@ -32,17 +34,7 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
       
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Prepare Selenoid configuration
+    - name: Create Selenoid config
       run: |
         mkdir -p selenoid
         echo '{
@@ -58,6 +50,17 @@ jobs:
           }
         }' > selenoid/browsers.json
         
+        echo '{
+          "videoOutputDir": "/tmp/video",
+          "logOutputDir": "/tmp/logs"
+        }' > selenoid/config.json
+        
+    - name: Show config files
+      run: |
+        ls -la selenoid/
+        cat selenoid/browsers.json
+        cat selenoid/config.json
+    
     - name: Wait for Selenoid
       run: |
         echo "Waiting for Selenoid to start..."
@@ -70,6 +73,7 @@ jobs:
           sleep 5
         done
         echo "Selenoid failed to start after 30 attempts"
+        docker logs selenoid || true
         curl http://localhost:4444/status || true
         exit 1
         
@@ -87,4 +91,4 @@ jobs:
         name: test-results
         path: |
           allure-results/
-          selenoid/logs/
+          selenoid/
