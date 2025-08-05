@@ -3,7 +3,9 @@ from pages.base_page import BasePage
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pathlib import Path
 from selenium.webdriver.support import expected_conditions as EC
-
+import base64
+from pathlib import Path
+import os
 
 class AuthorizationPage(BasePage):
     def enter_email(self, email):
@@ -49,9 +51,38 @@ class CreateRecipePage(BasePage):
     def enter_recipe_description(self, description):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
 
+    # def upload_recipe_image(self):
+    #     file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+    #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
     def upload_recipe_image(self):
         file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
-        self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
+        
+        if os.getenv('SELENOID_ENABLED') == 'true':
+            # Для Selenoid используем упрощенную загрузку через base64
+            with open(file_path, "rb") as f:
+                file_data = base64.b64encode(f.read()).decode('utf-8')
+            
+            script = """
+            const input = arguments[0];
+            const fileData = arguments[1];
+            
+            fetch(`data:image/png;base64,${fileData}`)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], 'картинка.png');
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                    input.dispatchEvent(new Event('change', {bubbles: true}));
+                });
+            """
+            input_element = self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT)
+            self.driver.execute_script(script, input_element, file_data)
+        else:
+            # Локальный запуск
+            self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
+        
+        time.sleep(1)  # Минимальное ожидание
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)

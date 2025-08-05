@@ -42,7 +42,10 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "volumes": ["/tmp:/tmp"]
+                "tmpfs": {
+                  "/tmp": "size=512m",
+                  "/dev/shm": "size=512m"
+                }
               }
             }
           }
