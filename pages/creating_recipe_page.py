@@ -3,9 +3,6 @@ from pages.base_page import BasePage
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pathlib import Path
 from selenium.webdriver.support import expected_conditions as EC
-import base64
-from pathlib import Path
-import os
 
 class AuthorizationPage(BasePage):
     def enter_email(self, email):
@@ -51,13 +48,13 @@ class CreateRecipePage(BasePage):
     def enter_recipe_description(self, description):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
 
-    # def upload_recipe_image(self):
-    #     file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
-    #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
-    def upload_recipe_image(self, image_path):
-        image_input = self.driver.find_element(*self.locators.IMAGE_INPUT)
-        image_input.send_keys(image_path)
-        time.sleep(2)
+    def upload_recipe_image(self):
+        file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+        self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
+    # def upload_recipe_image(self, image_path):
+    #     image_input = self.driver.find_element(*self.locators.IMAGE_INPUT)
+    #     image_input.send_keys(image_path)
+    #     time.sleep(2)
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)

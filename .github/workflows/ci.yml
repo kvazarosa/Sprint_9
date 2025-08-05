@@ -87,7 +87,7 @@ jobs:
         python -m pytest --alluredir=allure-results -v
       env:
         SELENOID_ENABLED: "true"
-        TEST_IMAGE_PATH: "/assets/test-image.png"  # Передаем путь в тесты
+        TEST_IMAGE_PATH: "/assets/картинка.png"  # Передаем путь в тесты
 
     - name: Upload results
       if: always()
