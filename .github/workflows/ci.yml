@@ -60,7 +60,10 @@ jobs:
         echo "Waiting for Selenoid to start..."
         sleep 15
         curl -v http://localhost:4444/status
-
+    - name: Copy test assets
+      run: |
+        mkdir -p assets
+        cp -r tests/assets/* assets/  # Копируем тестовые файлы в рабочую директорию
     - name: Run tests
       run: |
         python -m pytest --alluredir=allure-results -v
