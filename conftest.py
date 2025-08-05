@@ -1,6 +1,7 @@
 import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.remote_connection import RemoteConnection
 from data import Urls
 import os
 
@@ -14,6 +15,9 @@ def driver():
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--headless")
         
+        # Увеличиваем таймауты
+        RemoteConnection.set_timeout(90)
+        
         driver = webdriver.Remote(
             command_executor='http://localhost:4444/wd/hub',
             options=chrome_options
@@ -25,5 +29,6 @@ def driver():
         driver = webdriver.Chrome(options=chrome_options)
     
     driver.get(Urls.HOME_PAGE_URL)
+    driver.set_page_load_timeout(60)
     yield driver
     driver.quit()

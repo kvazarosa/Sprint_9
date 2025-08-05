@@ -27,8 +27,9 @@ jobs:
 
     - name: Pull browser images
       run: |
-        docker pull selenoid/chrome:120.0  # Используем стабильную версию
+        docker pull selenoid/chrome:120.0
         docker pull aerokube/selenoid:latest-release
+        docker pull selenoid/video-recorder:latest-release
 
     - name: Prepare Selenoid config
       run: |
@@ -42,23 +43,43 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "volumes": ["/tmp:/tmp"]
+                "volumes": ["/tmp:/tmp"],
+                "tmpfs": ["/tmp"]
               }
             }
           }
         }' > selenoid-config/browsers.json
 
-    - name: Start Selenoid
+        echo '{
+          "videoOutputDir": "/opt/selenoid/video",
+          "logOutputDir": "/opt/selenoid/logs",
+          "sessionTimeout": "5m",
+          "enableLog": true,
+          "enableVideo": true
+        }' > selenoid-config/config.json
+
+    - name: Start Selenoid with retries
       run: |
         docker run -d --name selenoid \
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid-config:/etc/selenoid \
+          -v $(pwd)/video:/opt/selenoid/video \
+          -v $(pwd)/logs:/opt/selenoid/logs \
+          -e OVERRIDE_VIDEO_OUTPUT_DIR=/opt/selenoid/video \
           aerokube/selenoid:latest-release \
-          -limit 5
+          -limit 5 -timeout 3m -service-startup-timeout 2m
         
-        echo "Waiting for Selenoid to start..."
-        sleep 15
+        echo "Waiting for Selenoid to initialize..."
+        for i in {1..10}; do
+          if docker logs selenoid 2>&1 | grep -q "Listening on"; then
+            echo "Selenoid is ready!"
+            break
+          fi
+          echo "Waiting for Selenoid to start... Attempt $i/10"
+          sleep 10
+        done
+
         curl -v http://localhost:4444/status
 
     - name: Run tests
@@ -66,13 +87,17 @@ jobs:
         python -m pytest --alluredir=allure-results -v
       env:
         SELENOID_ENABLED: "true"
+        SELENOID_TIMEOUT: "90s"
 
     - name: Upload results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-results
-        path: allure-results/
+        path: |
+          allure-results/
+          video/
+          logs/
 
     - name: Clean up
       if: always()
