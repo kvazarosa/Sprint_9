@@ -1,7 +1,101 @@
-name: CI Test
-on: [push]
+name: Selenoid Tests Workflow
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    services:
+      selenoid:
+        image: aerokube/selenoid:latest-release
+        ports:
+          - "4444:4444"
+        env:
+          OVERRIDE_VIDEO_OUTPUT_DIR: /tmp/video
+          DOCKER_API_VERSION: "1.40"
+        options: >-
+          --mount type=bind,source=${{ github.workspace }}/selenoid,target=/etc/selenoid
+          --health-cmd "curl -f http://localhost:4444/status || exit 1"
+          --health-interval 10s
+          --health-timeout 30s
+          --health-retries 10
+          --memory 2g
+          
     steps:
-      - run: echo "Workflow is working!"
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Create Selenoid config
+      run: |
+        mkdir -p selenoid
+        echo '{
+          "chrome": {
+            "default": "128.0",
+            "versions": {
+              "128.0": {
+                "image": "selenoid/chrome:128.0",
+                "port": "4444",
+                "path": "/"
+              }
+            }
+          }
+        }' > selenoid/browsers.json
+        
+        echo '{
+          "videoOutputDir": "/tmp/video",
+          "logOutputDir": "/tmp/logs"
+        }' > selenoid/config.json
+        
+        # Добавляем права на чтение
+        chmod -R 755 selenoid
+        
+    - name: Verify config files
+      run: |
+        echo "Contents of selenoid directory:"
+        ls -la selenoid/
+        echo "browsers.json content:"
+        cat selenoid/browsers.json
+        echo "config.json content:"
+        cat selenoid/config.json
+        
+    - name: Pull browser image
+      run: docker pull selenoid/chrome:128.0
+        
+    - name: Wait for Selenoid
+      run: |
+        echo "Waiting for Selenoid to start..."
+        for i in {1..30}; do
+          if curl -s http://localhost:4444/status | grep -q '"total":1'; then
+            echo "Selenoid is ready!"
+            exit 0
+          fi
+          echo "Attempt $i/30: Selenoid not ready yet..."
+          sleep 5
+        done
+        echo "Selenoid failed to start after 30 attempts"
+        docker logs selenoid || true
+        exit 1
+        
+    - name: Run tests
+      run: |
+        python -m pytest --alluredir=allure-results -v
+      env:
+        SELENOID_URL: http://localhost:4444/wd/hub
+        SELENOID_VERSION: "128.0"
+        
+    - name: Upload results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          allure-results/
+          selenoid/
