@@ -25,19 +25,17 @@ jobs:
 
         # browsers.json с явным указанием всех параметров
         echo '{
-          "chrome": {
-            "default": "128.0",
-            "versions": {
-              "128.0": {
-                "image": "selenoid/chrome:128.0",
-                "port": "4444",
-                "path": "/",
-                "env": ["TZ=UTC"],
-                "volumes": ["/tmp:/tmp", "$(pwd)/video:/opt/selenoid/video"],
-                "tmpfs": ["/tmp"]
-              }
+          {
+            "chrome": {
+                "default": "128.0",
+                "versions": {
+                    "128.0": {
+                        "image": "selenoid/chrome:128.0",
+                        "port": "4444",
+                        "path": "/"
+                    }
+                }
             }
-          }
         }' > selenoid/browsers.json
 
         # config.json с полной конфигурацией
