@@ -32,10 +32,22 @@ jobs:
 
     - name: Prepare test assets
       run: |
+        # Создаем папку assets если ее нет
+        mkdir -p tests/assets
+        
+        # Проверяем наличие исходного файла
+        if [ ! -f "tests/assets/картинка.png" ]; then
+          echo "Файл tests/assets/картинка.png не найден!"
+          ls -la tests/assets/
+          exit 1
+        fi
+        
+        # Копируем только если исходный файл существует
         mkdir -p assets
-        cp -r assets/* assets/
-        echo "Current directory: $(pwd)"
-        echo "Assets content:"
+        cp tests/assets/картинка.png assets/
+        
+        # Проверяем результат
+        echo "Содержимое assets:"
         ls -la assets/
 
     - name: Prepare Selenoid config
