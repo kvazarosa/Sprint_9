@@ -54,13 +54,21 @@ jobs:
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd)/selenoid-config:/etc/selenoid \
+          -v /tmp:/tmp \
           aerokube/selenoid:latest-release \
-          -limit 5
+          -limit 5 -timeout 5m
         
         echo "Waiting for Selenoid to start..."
         sleep 15
         curl -v http://localhost:4444/status
 
+    - name: Prepare test assets
+      run: |
+        # Создаем тестовое изображение в /tmp (доступно в контейнере Selenoid)
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg==" | base64 -d > /tmp/картинка.png
+        file /tmp/картинка.png
+        ls -la /tmp/картинка.png
+        
     - name: Run tests
       run: |
         python -m pytest --alluredir=allure-results -v

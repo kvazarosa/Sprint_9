@@ -1,4 +1,5 @@
 import time
+import os
 from pages.base_page import BasePage
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pathlib import Path
@@ -53,10 +54,12 @@ class CreateRecipePage(BasePage):
     #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
     #     return file_path
     def upload_recipe_image(self):
-        project_root = Path(__file__).parent.parent
-        file_path = project_root / "assets" / "картинка.png"
-        if not file_path.exists():
-            raise FileNotFoundError(f"Файл не найден: {file_path}")
+        # Для CI используем /tmp, для локального тестирования - assets
+        if os.getenv('CI'):
+            file_path = Path('/tmp/картинка.png')
+        else:
+            file_path = Path(__file__).parent.parent.parent / "assets" / "картинка.png"
+        
         self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
         return file_path
 
