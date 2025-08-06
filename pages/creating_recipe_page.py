@@ -78,6 +78,7 @@ class CreateRecipePage(BasePage):
         input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
         input_element.send_keys(str(file_path))  # Явное преобразование в строку
         
+        
         return str(file_path)  # Возвращаем строковый путь
 
     def click_create_recipe_final_button(self):
