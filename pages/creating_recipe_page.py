@@ -73,6 +73,7 @@ class CreateRecipePage(BasePage):
         if not file_path.exists():
             raise FileNotFoundError(f"Файл изображения не найден: {file_path}")
         
+        
         # Загружаем файл
         input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
         input_element.send_keys(str(file_path))
