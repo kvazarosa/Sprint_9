@@ -1,9 +1,5 @@
 import time
-import os
-from selenium.webdriver.common.by import By  
 from selenium.webdriver.support import expected_conditions as EC
-# from selenium.webdriver.support.ui import WebDriverWait
-
 from pages.base_page import BasePage
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pathlib import Path
@@ -53,33 +49,16 @@ class CreateRecipePage(BasePage):
     def enter_recipe_description(self, description):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
     
-    # def upload_recipe_image(self):
-    #     project_root = Path(__file__).parent.parent
-    #     file_path = project_root / "assets" / "картинка.png"
-        
-    #     if not file_path.exists():
-    #         file_path = "temp/картинка.png"
-    #     input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
-    #     print("===========================>\n", input_element)
-    #     print(f"Проверка файла в контейнере: {file_path}")
-    #     print(f"Файл существует: {os.path.exists(file_path)}")
-    #     print(f"Права доступа: {oct(os.stat(file_path).st_mode)[-3:]}")
-    #     input_element.send_keys(str(file_path))
-
-    #     return file_path
     def upload_recipe_image(self):
-        # Получаем путь как строку
         project_root = Path(__file__).parent.parent
         file_path = project_root / "assets" / "картинка.png"
         
         if not file_path.exists():
             file_path = "temp/картинка.png"
-        # Преобразуем Path в строку перед отправкой
         input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
-        input_element.send_keys(str(file_path))  # Явное преобразование в строку
-        
-        
-        return str(file_path)  # Возвращаем строковый путь
+        input_element.send_keys(str(file_path))
+    
+        return (file_path)
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
