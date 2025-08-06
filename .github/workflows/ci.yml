@@ -69,7 +69,7 @@ jobs:
         mkdir -p assets
         # Создаем тестовое изображение (1x1 пиксель)
         echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg==" | base64 -d > assets/картинка.png
-        # Проверяем что файл создан
+        chmod -R a+rw assets
         file assets/картинка.png
 
     - name: Start Selenoid
