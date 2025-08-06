@@ -58,7 +58,7 @@ class CreateRecipePage(BasePage):
         if os.getenv('CI'):
             file_path = Path('/tmp/картинка.png')
         else:
-            file_path = Path(__file__).parent.parent.parent / "assets" / "картинка.png"
+            file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
         
         self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
         return file_path
