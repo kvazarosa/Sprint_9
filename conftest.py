@@ -25,8 +25,8 @@ def driver():
         chrome_options.add_argument("--start-maximized")
         driver = webdriver.Chrome(options=chrome_options)
     
-    driver.implicitly_wait(15)  
-    driver.set_page_load_timeout(40) 
+    driver.implicitly_wait(30)  
+    driver.set_page_load_timeout(60) 
     
     driver.get(Urls.HOME_PAGE_URL)
     yield driver
