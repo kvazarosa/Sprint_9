@@ -63,6 +63,7 @@ class CreateRecipePage(BasePage):
         self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
         return file_path
 
+
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
 
