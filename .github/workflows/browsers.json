@@ -1,13 +1,16 @@
 {
   "chrome": {
-    "default": "128.0",
+    "default": "120.0",
     "versions": {
       "128.0": {
-        "image": "selenoid/chrome:128.0",
+        "image": "selenoid/chrome:120.0",
         "port": "4444",
         "path": "/",
         "env": ["TZ=UTC"],
-        "volumes": ["/tmp:/tmp"]
+        "volumes": [
+          "/github/workspace/assets:/assets:ro",
+          "/tmp:/tmp"
+        ]
       }
     }
   }

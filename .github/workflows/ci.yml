@@ -51,23 +51,36 @@ jobs:
           }
         }' > selenoid-config/browsers.json
 
+    # - name: Start Selenoid
+    #   run: |
+    #     docker run -d --name selenoid \
+    #       -p 4444:4444 \
+    #       -v /var/run/docker.sock:/var/run/docker.sock \
+    #       -v $(pwd)/selenoid-config:/etc/selenoid \
+    #       aerokube/selenoid:latest-release \
+    #       -limit 5
+        
+    #     echo "Waiting for Selenoid to start..."
+    #     sleep 15
+    #     curl -v http://localhost:4444/status
+
+    - name: Prepare test assets
+      run: |
+        mkdir -p assets
+        # Создаем тестовое изображение (1x1 пиксель)
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg==" | base64 -d > assets/картинка.png
+        # Проверяем что файл создан
+        file assets/картинка.png
+
     - name: Start Selenoid
       run: |
         docker run -d --name selenoid \
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          -v $(pwd)/selenoid-config:/etc/selenoid \
+          -v $(pwd)/.github/workflows/browsers.json:/etc/selenoid/browsers.json \
+          -v $(pwd)/assets:/assets:ro \
           aerokube/selenoid:latest-release \
-          -limit 5
-        
-        echo "Waiting for Selenoid to start..."
-        sleep 15
-        curl -v http://localhost:4444/status
-
-    - name: Prepare test assets
-      run: |
-        mkdir -p assets
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg==" | base64 -d > assets/картинка.png
+          -limit 5 -timeout 3m
 
     - name: Run tests
       run: |

@@ -49,8 +49,9 @@ class CreateRecipePage(BasePage):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
 
     def upload_recipe_image(self):
-        file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+        file_path = Path(__file__).parent.parent.parent / "assets" / "картинка.png"
         self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
+        return file_path
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
