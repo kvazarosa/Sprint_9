@@ -13,6 +13,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./video:/opt/selenoid/video"
       - "./logs:/opt/selenoid/logs"
+      - "./assets:/assets:ro"
     environment:
       - OVERRIDE_VIDEO_OUTPUT_DIR=./video
     command: ["-limit", "5", "-conf", "/etc/selenoid/browsers.json", "-container-network", "selenoid"]
