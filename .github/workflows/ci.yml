@@ -42,50 +42,24 @@ jobs:
                 "port": "4444",
                 "path": "/",
                 "env": ["TZ=UTC"],
-                "tmpfs": {
-                  "/tmp": "size=512m",
-                  "/dev/shm": "size=512m"
-                }
+                "volumes": ["/tmp:/tmp"]
               }
             }
           }
         }' > selenoid-config/browsers.json
-
-    # - name: Start Selenoid
-    #   run: |
-    #     docker run -d --name selenoid \
-    #       -p 4444:4444 \
-    #       -v /var/run/docker.sock:/var/run/docker.sock \
-    #       -v $(pwd)/selenoid-config:/etc/selenoid \
-    #       aerokube/selenoid:latest-release \
-    #       -limit 5
-        
-    #     echo "Waiting for Selenoid to start..."
-    #     sleep 15
-    #     curl -v http://localhost:4444/status
-
-    - name: Prepare test assets
-      run: |
-        mkdir -p assets
-        # Создаем тестовое изображение (1x1 пиксель)
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg==" | base64 -d > assets/картинка.png
-        chmod -R a+rw assets
-        file assets/картинка.png
 
     - name: Start Selenoid
       run: |
         docker run -d --name selenoid \
           -p 4444:4444 \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          -v $(pwd)/.github/workflows/browsers.json:/etc/selenoid/browsers.json \
-          -v $(pwd)/assets:/assets:ro \
+          -v $(pwd)/selenoid-config:/etc/selenoid \
           aerokube/selenoid:latest-release \
-          -limit 5 -timeout 5m -conf /etc/selenoid/browsers.json
+          -limit 5
         
         echo "Waiting for Selenoid to start..."
         sleep 15
         curl -v http://localhost:4444/status
-        docker logs selenoid
 
     - name: Run tests
       run: |
