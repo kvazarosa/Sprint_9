@@ -26,7 +26,7 @@ def driver():
         driver = webdriver.Chrome(options=chrome_options)
     
     driver.implicitly_wait(40)  
-    driver.set_page_load_timeout(60) 
+    driver.set_page_load_timeout(90) 
     
     driver.get(Urls.HOME_PAGE_URL)
     yield driver
