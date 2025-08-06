@@ -7,7 +7,6 @@
         "port": "4444",
         "path": "/",
         "volumes": [
-          "/github/workspace/assets:/assets:ro",
           "/tmp:/tmp"
         ],
         "env": [
