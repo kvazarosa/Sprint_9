@@ -66,7 +66,7 @@ class CreateRecipePage(BasePage):
     
     def upload_recipe_image(self):
         # Получаем абсолютный путь к файлу
-        project_root = Path(__file__).parent.parent.parent  # Поднимаемся до корня проекта
+        project_root = Path(__file__).parent.parent  # Поднимаемся до корня проекта
         file_path = project_root / "assets" / "картинка.png"
         
         # Проверяем существование файла
