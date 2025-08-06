@@ -2,15 +2,21 @@
   "chrome": {
     "default": "120.0",
     "versions": {
-      "128.0": {
+      "120.0": {
         "image": "selenoid/chrome:120.0",
         "port": "4444",
         "path": "/",
-        "env": ["TZ=UTC"],
         "volumes": [
           "/github/workspace/assets:/assets:ro",
           "/tmp:/tmp"
-        ]
+        ],
+        "env": [
+          "TZ=UTC"
+        ],
+        "tmpfs": {
+          "/tmp": "size=256m",
+          "/dev/shm": "size=256m"
+        }
       }
     }
   }

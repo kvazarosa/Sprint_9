@@ -80,7 +80,12 @@ jobs:
           -v $(pwd)/.github/workflows/browsers.json:/etc/selenoid/browsers.json \
           -v $(pwd)/assets:/assets:ro \
           aerokube/selenoid:latest-release \
-          -limit 5 -timeout 3m
+          -limit 5 -timeout 5m -conf /etc/selenoid/browsers.json
+        
+        echo "Waiting for Selenoid to start..."
+        sleep 15
+        curl -v http://localhost:4444/status
+        docker logs selenoid
 
     - name: Run tests
       run: |
