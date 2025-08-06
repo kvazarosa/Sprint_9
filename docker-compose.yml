@@ -40,7 +40,6 @@ services:
       - SELENOID_URL=http://selenoid:4444/wd/hub
     volumes:
       - "./allure-results:/app/allure-results"
-      - "./assets:/app/assets:ro"
 
 networks:
   selenoid:
