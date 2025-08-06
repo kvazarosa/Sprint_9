@@ -74,9 +74,9 @@ class CreateRecipePage(BasePage):
             # raise FileNotFoundError(f"Файл изображения не найден: {file_path}")
             file_path = "temp/картинка.png"
         
-        print("===========================>\n", file_path)
         # Загружаем файл
         input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
+        print("===========================>\n", input_element)
         input_element.send_keys(str(file_path))
         
         return file_path
