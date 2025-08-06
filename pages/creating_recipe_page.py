@@ -62,6 +62,7 @@ class CreateRecipePage(BasePage):
         print(f"Файл существует: {os.path.exists(file_path)}")
         print(f"Права доступа: {oct(os.stat(file_path).st_mode)[-3:]}")
         input_element.send_keys(str(file_path))
+        
         return file_path
 
     def click_create_recipe_final_button(self):
