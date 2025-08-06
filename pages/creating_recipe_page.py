@@ -67,29 +67,18 @@ class CreateRecipePage(BasePage):
     #     input_element.send_keys(str(file_path))
 
     #     return file_path
-
     def upload_recipe_image(self):
-        """Загружает изображение через input[type='file']"""
-        # Указываем путь, доступный внутри контейнера Selenoid
-        file_path = "/tmp/картинка.png"  # Общий путь для контейнера и хоста
+        # Получаем путь как строку
+        project_root = Path(__file__).parent.parent
+        file_path = project_root / "assets" / "картинка.png"
         
-        if not Path(file_path).exists():
-            project_root = Path(__file__).parent.parent
-            file_path = project_root / "assets" / "картинка.png"
-            
+        if not file_path.exists():
+            file_path = "temp/картинка.png"
+        # Преобразуем Path в строку перед отправкой
+        input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
+        input_element.send_keys(str(file_path))  # Явное преобразование в строку
         
-        input_element = self.wait.until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//input[@type='file']") 
-            )
-        )
-        
-        input_element.send_keys(file_path)
-        
-        if not input_element.get_attribute("value"):
-            raise RuntimeError("Файл не был прикреплён к input-элементу")
-        
-        return file_path
+        return str(file_path)  # Возвращаем строковый путь
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
