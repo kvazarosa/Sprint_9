@@ -65,18 +65,16 @@ class CreateRecipePage(BasePage):
     #     return file_path
     
     def upload_recipe_image(self):
-        # Получаем абсолютный путь к файлу
-        project_root = Path(__file__).parent.parent  # Поднимаемся до корня проекта
-        file_path = project_root / "assets" / "картинка.png"
+        # Используем путь /tmp в Selenoid
+        file_path = "/tmp/картинка.png"
         
         # Проверяем существование файла
-        if not file_path.exists():
+        if not Path(file_path).exists():
             raise FileNotFoundError(f"Файл изображения не найден: {file_path}")
-        
         
         # Загружаем файл
         input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
-        input_element.send_keys(str(file_path))
+        input_element.send_keys(file_path)
         
         return file_path
 
