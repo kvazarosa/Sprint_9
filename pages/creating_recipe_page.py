@@ -57,11 +57,11 @@ class CreateRecipePage(BasePage):
         if not file_path.exists():
             file_path = "temp/картинка.png"
         input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
-        input_element.send_keys(str(file_path))
         print("===========================>\n", input_element)
         print(f"Проверка файла в контейнере: {file_path}")
         print(f"Файл существует: {os.path.exists(file_path)}")
         print(f"Права доступа: {oct(os.stat(file_path).st_mode)[-3:]}")
+        input_element.send_keys(str(file_path))
         return file_path
 
     def click_create_recipe_final_button(self):
