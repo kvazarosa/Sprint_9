@@ -76,6 +76,7 @@ class CreateRecipePage(BasePage):
         input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
         input_element.send_keys(file_path)
         
+        
         return file_path
 
     def click_create_recipe_final_button(self):
