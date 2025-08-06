@@ -1,6 +1,9 @@
 import time
 import os
-import base64
+from selenium.webdriver.common.by import By  
+from selenium.webdriver.support import expected_conditions as EC
+# from selenium.webdriver.support.ui import WebDriverWait
+
 from pages.base_page import BasePage
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pathlib import Path
@@ -50,18 +53,41 @@ class CreateRecipePage(BasePage):
     def enter_recipe_description(self, description):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
     
-    def upload_recipe_image(self):
-        project_root = Path(__file__).parent.parent
-        file_path = project_root / "assets" / "картинка.png"
+    # def upload_recipe_image(self):
+    #     project_root = Path(__file__).parent.parent
+    #     file_path = project_root / "assets" / "картинка.png"
         
-        if not file_path.exists():
-            file_path = "temp/картинка.png"
-        input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
-        print("===========================>\n", input_element)
-        print(f"Проверка файла в контейнере: {file_path}")
-        print(f"Файл существует: {os.path.exists(file_path)}")
-        print(f"Права доступа: {oct(os.stat(file_path).st_mode)[-3:]}")
-        input_element.send_keys(str(file_path))
+    #     if not file_path.exists():
+    #         file_path = "temp/картинка.png"
+    #     input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
+    #     print("===========================>\n", input_element)
+    #     print(f"Проверка файла в контейнере: {file_path}")
+    #     print(f"Файл существует: {os.path.exists(file_path)}")
+    #     print(f"Права доступа: {oct(os.stat(file_path).st_mode)[-3:]}")
+    #     input_element.send_keys(str(file_path))
+
+    #     return file_path
+
+    def upload_recipe_image(self):
+        """Загружает изображение через input[type='file']"""
+        # Указываем путь, доступный внутри контейнера Selenoid
+        file_path = "/tmp/картинка.png"  # Общий путь для контейнера и хоста
+        
+        if not Path(file_path).exists():
+            project_root = Path(__file__).parent.parent
+            file_path = project_root / "assets" / "картинка.png"
+            
+        
+        input_element = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//input[@type='file']") 
+            )
+        )
+        
+        input_element.send_keys(file_path)
+        
+        if not input_element.get_attribute("value"):
+            raise RuntimeError("Файл не был прикреплён к input-элементу")
         
         return file_path
 
