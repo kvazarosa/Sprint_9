@@ -49,36 +49,19 @@ class CreateRecipePage(BasePage):
 
     def enter_recipe_description(self, description):
         self.input_text(CreateRecipeLocators.FIELD_RECIPE_DESCRIPTION, description)
-
-    # def upload_recipe_image(self):
-    #     file_path = Path(__file__).parent.parent.parent / "assets" / "картинка.png"
-    #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
-    #     return file_path
-    # def upload_recipe_image(self):
-    #     # Для CI используем /tmp, для локального тестирования - assets
-    #     if os.getenv('CI'):
-    #         file_path = Path('/tmp/картинка.png')
-    #     else:
-    #         file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
-        
-    #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
-    #     return file_path
     
     def upload_recipe_image(self):
-        # Получаем абсолютный путь к файлу
-        project_root = Path(__file__).parent.parent  # Поднимаемся до корня проекта
+        project_root = Path(__file__).parent.parent
         file_path = project_root / "assets" / "картинка.png"
         
-        # Проверяем существование файла
         if not file_path.exists():
-            # raise FileNotFoundError(f"Файл изображения не найден: {file_path}")
             file_path = "temp/картинка.png"
-        
-        # Загружаем файл
         input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
-        print("===========================>\n", input_element)
         input_element.send_keys(str(file_path))
-        
+        print("===========================>\n", input_element)
+        print(f"Проверка файла в контейнере: {file_path}")
+        print(f"Файл существует: {os.path.exists(file_path)}")
+        print(f"Права доступа: {oct(os.stat(file_path).st_mode)[-3:]}")
         return file_path
 
     def click_create_recipe_final_button(self):
