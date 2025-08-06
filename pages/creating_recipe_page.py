@@ -1,5 +1,6 @@
 import time
 import os
+import base64
 from pages.base_page import BasePage
 from locators.creating_recipe_locators import CreateRecipeLocators
 from pathlib import Path
@@ -62,7 +63,25 @@ class CreateRecipePage(BasePage):
         
         self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
         return file_path
-
+    def upload_recipe_image(self):
+    # Для CI используем base64-encoded изображение
+        if os.getenv('CI'):
+            # 1x1 пиксель PNG изображение в base64
+            file_content = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg=="
+            file_path = "/tmp/test_image.png"
+            with open(file_path, "wb") as f:
+                f.write(base64.b64decode(file_content))
+        else:
+            file_path = Path(__file__).parent.parent.parent / "assets" / "картинка.png"
+        
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Файл не найден: {file_path}")
+        
+        input_element = self.wait.until(
+            EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT)
+        )
+        input_element.send_keys(file_path)
+        return file_path
 
     def click_create_recipe_final_button(self):
         self.click_element(CreateRecipeLocators.CREATE_RECIPE_BUTTON)
