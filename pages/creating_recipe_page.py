@@ -54,33 +54,29 @@ class CreateRecipePage(BasePage):
     #     file_path = Path(__file__).parent.parent.parent / "assets" / "картинка.png"
     #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
     #     return file_path
+    # def upload_recipe_image(self):
+    #     # Для CI используем /tmp, для локального тестирования - assets
+    #     if os.getenv('CI'):
+    #         file_path = Path('/tmp/картинка.png')
+    #     else:
+    #         file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+        
+    #     self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
+    #     return file_path
+    
     def upload_recipe_image(self):
-        # Для CI используем /tmp, для локального тестирования - assets
-        if os.getenv('CI'):
-            file_path = Path('/tmp/картинка.png')
-        else:
-            file_path = Path(__file__).parent.parent / "assets" / "картинка.png"
+        # Получаем абсолютный путь к файлу
+        project_root = Path(__file__).parent.parent.parent  # Поднимаемся до корня проекта
+        file_path = project_root / "assets" / "картинка.png"
         
-        self.element_is_present(CreateRecipeLocators.FILE_UPLOAD_INPUT).send_keys(str(file_path))
-        return file_path
-    def upload_recipe_image(self):
-    # Для CI используем base64-encoded изображение
-        if os.getenv('CI'):
-            # 1x1 пиксель PNG изображение в base64
-            file_content = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg=="
-            file_path = "/tmp/test_image.png"
-            with open(file_path, "wb") as f:
-                f.write(base64.b64decode(file_content))
-        else:
-            file_path = Path(__file__).parent.parent.parent / "assets" / "картинка.png"
+        # Проверяем существование файла
+        if not file_path.exists():
+            raise FileNotFoundError(f"Файл изображения не найден: {file_path}")
         
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Файл не найден: {file_path}")
+        # Загружаем файл
+        input_element = self.wait.until(EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT))
+        input_element.send_keys(str(file_path))
         
-        input_element = self.wait.until(
-            EC.presence_of_element_located(CreateRecipeLocators.FILE_UPLOAD_INPUT)
-        )
-        input_element.send_keys(file_path)
         return file_path
 
     def click_create_recipe_final_button(self):

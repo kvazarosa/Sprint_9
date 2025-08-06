@@ -64,9 +64,8 @@ jobs:
 
     - name: Prepare test assets
       run: |
-        # Создаем тестовое изображение в /tmp (доступно в контейнере Selenoid)
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFCAH/l8iGQAAAAABJRU5ErkJggg==" | base64 -d > /tmp/картинка.png
-        file /tmp/картинка.png
+        cp assets/картинка.png /tmp/картинка.png
+        chmod 644 /tmp/картинка.png
         ls -la /tmp/картинка.png
         
     - name: Run tests
